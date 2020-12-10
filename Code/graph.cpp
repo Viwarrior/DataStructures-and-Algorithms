@@ -2,6 +2,21 @@
 using namespace std;
 
 
+
+
+
+
+
+
+
+
+  bool sortbythird(const tuple<int, int, int>& a,
+               const tuple<int, int, int>& b)
+{
+    return (get<2>(a) < get<2>(b));
+}
+
+
 class Graphlist{
 vector< pair<int,int>> base[10];
 
@@ -13,7 +28,7 @@ public:
 
 
     void bfs(int node){
-        cout<<endl;
+        cout<<"BFS"<<endl;
     int visited[10] = {0};
     int distance[10] = {0};
     deque<int> q;
@@ -56,9 +71,11 @@ public:
 
 
     void dfs(int node){
+        cout<<"DFS "<<endl;
         int visited[10] = {0};
-        cout<<visited[2];
+
         depthsearch(node, visited);
+        cout<<endl;
     }
 
     void dijkstra(int node){
@@ -85,12 +102,56 @@ public:
             }
 
         }
+        cout<<"Dijkstra minimum distance from "<<node<<endl;
+        for(int i=0; i<10; i++){
+                if(distance[i]!= 0 and distance[i]!= 500)
+           cout<<"Node "<<i<<" with distance "<<distance[i]<<endl;
 
-        for(int i=0; i<10; i++)
-            cout<<distance[i]<<" ";
+        }
+    }
+
+    void prims(int node){
+        cout<<endl;
+        int distance[10];
+        fill(distance, distance+10,500);
+        distance[node] =0;
+        int visited[10] = {0};
+        deque <pair<int, int>> p;
+        make_heap(p.begin(),p.end());
+        p.push_back({0,node});
+        push_heap(p.begin(),p.end());
+
+        while(!p.empty()){
+            pair<int,int> u = p.front();
+            p.pop_front();
+            pop_heap(p.begin(),p.end());
+            if(visited[u.second]) continue;
+            visited[u.second] = 1;
+            for(auto x: base[u.second]){
+                distance[x.first] = min(distance[x.first], x.second); //only diff from dijkstra
+                p.push_back({-1*distance[x.first],x.first});
+                push_heap(p.begin(),p.end());
+            }
+
+        }
+        cout<<"spanning tree using prims: "<<endl;
+        for(int i=0; i<10; i++){
+            if(distance[i]!= 0 and distance[i]!= 500)
+            cout<<"originating from "<<i<<" with weight "<<distance[i]<<endl;
+        }
+
     }
 
 };
+
+
+
+
+
+
+
+
+
 
 class Graphedgelist{
 vector<tuple<int,int,int>> base;
@@ -102,6 +163,7 @@ vector<tuple<int,int,int>> base;
 
 
      void bellmanford(int node){
+         cout<<"Bellman Ford: "<<endl;
          int distance[10];
          fill(distance, distance+10,500); // big no 500 to repr inf
          distance[node] = 0;
@@ -122,9 +184,56 @@ vector<tuple<int,int,int>> base;
 
      }
 
+    int find_r(int x,int (&link)[10]){
+        while(link[x]!= x) x =link[x];
+
+        return x;
+    }
+
+    bool same(int a, int b, int (&link)[10]){
+        if(find_r(a, link) == find_r(b, link))
+            return true;
+        return false;
+    }
+
+    void unite(int a, int b, int (&link)[10]){
+    a = find_r(a,link);
+    b = find_r(b, link);
+    link[a] = b;
+    }
+
+
+
+     void krushkals(){
+    cout<<endl<<"Krushkals algorithm "<<endl;
+    int link[10];
+    for(int i=0; i<10; i++){
+        link[i] = i;
+    }
+    sort(base.begin(),base.end(),sortbythird);
+    int a,b,c;
+    for(int i =0; i<base.size();i++){
+        tie(a,b,c)= base[i];
+
+        if(!same(a,b, link)){ unite(a,b, link); cout<<a<<"->"<<b<<endl; }
+         //cout<<a<<" "<<b<<" "<<c<<" "<<endl;
+    }
+
+    for(int i =0; i<10; i++)
+        cout<<"next of "<<i<<" is "<<link[i]<<endl;
+     }
+
 
 
 };
+
+
+
+
+
+
+
+
 
 
 class Graphmatrix{
@@ -151,6 +260,7 @@ public:
     }
 
     void floydwarshall(){
+        cout<<"Floyd Warshall"<<endl;
     int distance[10][10];
     memcpy (distance, base, 10*10*sizeof(int));
      for(int i=0;i<10;i++)
@@ -175,6 +285,11 @@ public:
 
 
 int main(){
+/*
+0 - 1 - 2
+|\5 |   |
+7   4 - 3
+ */
 Graphlist g;
 g.add(0,1,2);
 g.add(0,7,5);
@@ -187,6 +302,7 @@ g.add(2,3,2);
 g.dfs(0);
 g.bfs(0);
 g.dijkstra(0);
+g.prims(0);
 
 
 Graphedgelist p;
@@ -197,6 +313,7 @@ p.add(1,2,1);
 p.add(1,4,3);
 p.add(4,3,7);
 p.add(2,3,2);
+p.krushkals();
 
 p.bellmanford(0);
 cout<<endl;
